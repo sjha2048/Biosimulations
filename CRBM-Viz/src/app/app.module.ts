@@ -15,14 +15,10 @@ import { MaterialModule } from './Modules/app-material.module';
 
 // Defined components
 import { AppComponent } from './app.component';
-
-
+import { AuthInterceptorService } from './Shared/Interceptors/auth-interceptor.service';
 
 import { SharedModule } from './Shared/shared.module';
-import { AboutModule } from './Modules/about/about.module';
-import { AccountModule } from './Modules/account/account.module';
-import { ModelsModule } from './Modules/models/models.module';
-import { AuthInterceptorService } from './Shared/Interceptors/auth-interceptor.service';
+import { BreadCrumbsService } from 'src/app/Shared/Services/bread-crumbs.service';
 
 // Pipes defined in app
 
@@ -44,9 +40,6 @@ import { AuthInterceptorService } from './Shared/Interceptors/auth-interceptor.s
     HttpClientModule,
     MaterialModule,
     SharedModule,
-    AboutModule,
-    AccountModule,
-    ModelsModule,
   ],
   providers: [
     {
@@ -54,6 +47,7 @@ import { AuthInterceptorService } from './Shared/Interceptors/auth-interceptor.s
       useClass: AuthInterceptorService,
       multi: true,
     },
+    BreadCrumbsService,
   ],
   bootstrap: [AppComponent],
 
