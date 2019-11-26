@@ -7,6 +7,7 @@ import { SimulationResultsFormat } from 'src/app/Shared/Enums/simulation-results
 import { BreadCrumbsService } from 'src/app/Shared/Services/bread-crumbs.service';
 import { SimulationService } from 'src/app/Shared/Services/simulation.service';
 import { FormatTimeForHumansPipe } from 'src/app/Shared/Pipes/format-time-for-humans.pipe';
+import  * as sedml from 'src/simulation.json'
 
 @Component({
   templateUrl: './view.component.html',
@@ -17,6 +18,7 @@ export class ViewComponent implements OnInit {
   simulation: Simulation;
   simulationHistoryTreeNodes: object[];
   SimulationResultsFormat = SimulationResultsFormat;
+  tasks: object[];
 
   constructor(
     private router: Router,
@@ -61,6 +63,8 @@ export class ViewComponent implements OnInit {
       },
     ];
     this.breadCrumbsService.set(crumbs, buttons, ['tabs']);
+
+    this.tasks = this.getTasks()
   }
 
   getData() {
@@ -74,5 +78,18 @@ export class ViewComponent implements OnInit {
 
   visualize(): void {
     this.router.navigate(['/visualizations', this.id]);
+  }
+
+  getTasks() {
+    // TODO: Replace this with http call via Fileservice
+    const tasks = []
+    return JSON.stringify(sedml.sedML.listOfTasks.task)
+  }
+
+  getOutputs() {
+  }
+
+  getSEDMLData() {
+
   }
 }
