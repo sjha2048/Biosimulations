@@ -84,13 +84,15 @@ export class ViewComponent implements OnInit {
   getTasks() {
     // TODO: Replace this with http call via Fileservice
     const tasks = []
-    return JSON.stringify(sedml.sedML.listOfTasks.task)
+    tasks.push(JSON.stringify(sedml.sedML.listOfTasks.task))
+    return tasks
   }
 
   getOutputs() {
     // TODO: Replace this with http call via Fileservice
     const outputs = []
-    return JSON.stringify(sedml.sedML.listOfOutputs.plot2D)
+    outputs.push(JSON.stringify(sedml.sedML.listOfOutputs.plot2D))
+    return outputs
   }
 
   getSEDMLData() {
