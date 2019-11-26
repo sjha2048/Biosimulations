@@ -19,6 +19,7 @@ export class ViewComponent implements OnInit {
   simulationHistoryTreeNodes: object[];
   SimulationResultsFormat = SimulationResultsFormat;
   tasks: object[];
+  outputs: object[];
 
   constructor(
     private router: Router,
@@ -63,8 +64,8 @@ export class ViewComponent implements OnInit {
       },
     ];
     this.breadCrumbsService.set(crumbs, buttons, ['tabs']);
-
-    this.tasks = this.getTasks()
+  
+    this.getSEDMLData();
   }
 
   getData() {
@@ -87,9 +88,13 @@ export class ViewComponent implements OnInit {
   }
 
   getOutputs() {
+    // TODO: Replace this with http call via Fileservice
+    const outputs = []
+    return JSON.stringify(sedml.sedML.listOfOutputs.plot2D)
   }
 
   getSEDMLData() {
-
+    this.tasks = this.getTasks()
+    this.outputs = this.getOutputs()
   }
 }
