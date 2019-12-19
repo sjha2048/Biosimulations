@@ -559,6 +559,9 @@ customElements.define('compodoc-menu', class extends HTMLElement {
                                 <a href="classes/User.html" data-type="entity-link">User</a>
                             </li>
                             <li class="link">
+                                <a href="classes/UserSerializer.html" data-type="entity-link">UserSerializer</a>
+                            </li>
+                            <li class="link">
                                 <a href="classes/UtilsService.html" data-type="entity-link">UtilsService</a>
                             </li>
                             <li class="link">

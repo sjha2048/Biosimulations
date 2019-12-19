@@ -328,8 +328,8 @@ the user service. If not, it assumes the logged in profile&#39;s username. It th
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="65"
-                            class="link-to-prism">CRBM-Viz/src/app/Modules/user/profile/profile.component.ts:65</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="58"
+                            class="link-to-prism">CRBM-Viz/src/app/Modules/user/profile/profile.component.ts:58</a></div>
                 </td>
             </tr>
 
@@ -519,15 +519,8 @@ export class ProfileComponent implements OnInit {
    * the user service. If not, it assumes the logged in profile&#x27;s username. It then calls a method to create the view&#x27;s breadcrumbs
    */
   ngOnInit() {
-    this.auth.getUser$().subscribe(profile &#x3D;&gt; {
-      if (profile) {
-        this.loggedInUsername &#x3D;
-          profile[&#x27;https://www.biosimulations.org:app_metadata&#x27;][&#x27;username&#x27;];
-        console.log(profile);
-      } else {
-        this.loggedInUsername &#x3D; null;
-      }
-
+    this.auth.getUsername$().subscribe(name &#x3D;&gt; {
+      this.loggedInUsername &#x3D; name;
       this.route.params.subscribe(routeParams &#x3D;&gt; {
         let username;
         if (routeParams.username) {
@@ -566,7 +559,7 @@ export class ProfileComponent implements OnInit {
       });
     } else {
       crumbs.push({
-        label: this.user.username,
+        label: this.user.userName,
       });
     }
     this.breadCrumbsService.set(crumbs, buttons);
@@ -579,9 +572,11 @@ export class ProfileComponent implements OnInit {
         <pre class="line-numbers"><code class="language-html">&lt;div class&#x3D;&quot;page-content partial-width&quot;&gt;
   &lt;div *ngIf&#x3D;&quot;user&quot;&gt;
     &lt;div class&#x3D;&quot;profile&quot;&gt;
-      &lt;img class&#x3D;&quot;photo&quot; src&#x3D;&quot;{{ user.getGravatarImgUrl() }}&quot; /&gt;
+      &lt;div class&#x3D;&quot;photo-container&quot;&gt;
+        &lt;img class&#x3D;&quot;photo&quot; src&#x3D;&quot;{{ user.getGravatarImgUrl() }}&quot; /&gt;
+      &lt;/div&gt;
       &lt;div class&#x3D;&quot;name mat-title&quot;&gt;{{ user.firstName }} {{ user.middleName }} {{ user.lastName }}&lt;/div&gt;
-      &lt;div class&#x3D;&quot;username light&quot;&gt;{{ user.username }}&lt;/div&gt;
+      &lt;div class&#x3D;&quot;username light&quot;&gt;{{ user.userName }}&lt;/div&gt;
       &lt;div class&#x3D;&quot;description&quot; *ngIf&#x3D;&quot;user.description&quot;&gt;{{
         user.description
       }}&lt;/div&gt;
@@ -748,11 +743,20 @@ export class ProfileComponent implements OnInit {
     width: 15rem
     float: left
 
-    .photo
+    .photo-container
         width: 100%
-        max-height: 15rem
         border: 1px solid #ccc
         margin-bottom: 0.5rem
+        overflow: hidden
+        line-height: 0
+    
+    .photo
+        width: 100%
+        max-height: 15rem        
+        transition: all 0.5s
+
+    .photo:hover
+        transform: scale(1.08)
 
     .name
         font-size: 1.5rem
@@ -848,7 +852,7 @@ export class ProfileComponent implements OnInit {
 <script src="../js/libs/htmlparser.js"></script>
 <script src="../js/libs/deep-iterator.js"></script>
 <script>
-        var COMPONENT_TEMPLATE = '<div><div class="page-content partial-width">  <div *ngIf="user">    <div class="profile">      <img class="photo" src="{{ user.getGravatarImgUrl() }}" />      <div class="name mat-title">{{ user.firstName }} {{ user.middleName }} {{ user.lastName }}</div>      <div class="username light">{{ user.username }}</div>      <div class="description" *ngIf="user.description">{{        user.description      }}</div>      <table class="details">        <tr *ngIf="user.organization">          <th>            <mat-icon aria-hidden="false" aria-label="Organization"              >people</mat-icon            >          </th>          <td>{{ user.organization }}</td>        </tr>        <tr *ngIf="user.website">          <th>            <mat-icon aria-hidden="false" aria-label="Website">link</mat-icon>          </th>          <td>            <a href="{{ user.website }}">{{              user.website            }}</a>          </td>        </tr>        <tr *ngIf="user.email && user.emailPublic" class="email">          <th><mat-icon aria-hidden="false" aria-label="Email">email</mat-icon></th>          <td>            <a href="mailto:{{ user.email }}">{{ user.email }}</a>          </td>        </tr>        <tr *ngIf="user.gitHubId">          <th>            <fa-icon              [icon]="[\'fab\', \'github\']"              size="lg"              aria-hidden="false"              aria-label="GitHub"            ></fa-icon>          </th>          <td>            <a href="https://github.com/{{ user.gitHubId }}">{{              user.gitHubId            }}</a>          </td>        </tr>        <tr *ngIf="user.googleScholarId">          <th>            <fa-icon              [icon]="[\'fab\', \'google\']"              size="lg"              aria-hidden="false"              aria-label="Google Scholar"            ></fa-icon>          </th>          <td>            <a              href="https://scholar.google.com/citations?user={{                user.googleScholarId              }}"              >{{ user.googleScholarId }}</a            >          </td>        </tr>        <tr *ngIf="user.orcId">          <th>            <fa-icon              [icon]="[\'fab\', \'orcid\']"              size="lg"              aria-hidden="false"              aria-label="ORCID"            ></fa-icon>          </th>          <td>            <a href="https://orcid.org/{{ user.orcId }}">{{              user.orcId            }}</a>          </td>        </tr>      </table>    </div>    <div class="resources-container">      <ng-container *ngIf="user.getProjects() as projects">        <div class="resources" *ngIf="projects.length > 0">          <div class="resources-title float-container">            <h2>Projects ({{ projects.length }})</h2>            <a [routerLink]="[\'projects\']">View all</a>          </div>          <app-project-cards            [projects]="projects"            [maxProjects]="10"          ></app-project-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getModels() as models">        <div class="resources" *ngIf="models.length > 0">          <div class="resources-title float-container">            <h2>Models ({{ models.length }})</h2>            <a [routerLink]="[\'models\']">View all</a>          </div>          <app-model-cards            [models]="models"            [maxModels]="10"          ></app-model-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getSimulations() as simulations">        <div class="resources" *ngIf="simulations.length > 0">          <div class="resources-title float-container">            <h2>Simulations ({{ simulations.length }})</h2>            <a [routerLink]="[\'simulations\']">View all</a>          </div>          <app-simulation-cards            [simulations]="simulations"            [maxSimulations]="10"          ></app-simulation-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getChartTypes() as chartTypes">        <div class="resources" *ngIf="chartTypes.length > 0">          <div class="resources-title float-container">            <h2>Chart types ({{ chartTypes.length }})</h2>            <a [routerLink]="[\'chart-types\']">View all</a>          </div>          <app-chart-type-cards            [chartTypes]="chartTypes"            [maxChartTypes]="10"          ></app-chart-type-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getVisualizations() as visualizations">        <div class="resources" *ngIf="visualizations.length > 0">          <div class="resources-title float-container">            <h2>Visualizations ({{ visualizations.length }})</h2>            <a [routerLink]="[\'visualizations\']">View all</a>          </div>          <app-visualization-cards            [visualizations]="visualizations"            [maxVisualizations]="10"          ></app-visualization-cards>        </div>      </ng-container>    </div>  </div></div></div>'
+        var COMPONENT_TEMPLATE = '<div><div class="page-content partial-width">  <div *ngIf="user">    <div class="profile">      <div class="photo-container">        <img class="photo" src="{{ user.getGravatarImgUrl() }}" />      </div>      <div class="name mat-title">{{ user.firstName }} {{ user.middleName }} {{ user.lastName }}</div>      <div class="username light">{{ user.userName }}</div>      <div class="description" *ngIf="user.description">{{        user.description      }}</div>      <table class="details">        <tr *ngIf="user.organization">          <th>            <mat-icon aria-hidden="false" aria-label="Organization"              >people</mat-icon            >          </th>          <td>{{ user.organization }}</td>        </tr>        <tr *ngIf="user.website">          <th>            <mat-icon aria-hidden="false" aria-label="Website">link</mat-icon>          </th>          <td>            <a href="{{ user.website }}">{{              user.website            }}</a>          </td>        </tr>        <tr *ngIf="user.email && user.emailPublic" class="email">          <th><mat-icon aria-hidden="false" aria-label="Email">email</mat-icon></th>          <td>            <a href="mailto:{{ user.email }}">{{ user.email }}</a>          </td>        </tr>        <tr *ngIf="user.gitHubId">          <th>            <fa-icon              [icon]="[\'fab\', \'github\']"              size="lg"              aria-hidden="false"              aria-label="GitHub"            ></fa-icon>          </th>          <td>            <a href="https://github.com/{{ user.gitHubId }}">{{              user.gitHubId            }}</a>          </td>        </tr>        <tr *ngIf="user.googleScholarId">          <th>            <fa-icon              [icon]="[\'fab\', \'google\']"              size="lg"              aria-hidden="false"              aria-label="Google Scholar"            ></fa-icon>          </th>          <td>            <a              href="https://scholar.google.com/citations?user={{                user.googleScholarId              }}"              >{{ user.googleScholarId }}</a            >          </td>        </tr>        <tr *ngIf="user.orcId">          <th>            <fa-icon              [icon]="[\'fab\', \'orcid\']"              size="lg"              aria-hidden="false"              aria-label="ORCID"            ></fa-icon>          </th>          <td>            <a href="https://orcid.org/{{ user.orcId }}">{{              user.orcId            }}</a>          </td>        </tr>      </table>    </div>    <div class="resources-container">      <ng-container *ngIf="user.getProjects() as projects">        <div class="resources" *ngIf="projects.length > 0">          <div class="resources-title float-container">            <h2>Projects ({{ projects.length }})</h2>            <a [routerLink]="[\'projects\']">View all</a>          </div>          <app-project-cards            [projects]="projects"            [maxProjects]="10"          ></app-project-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getModels() as models">        <div class="resources" *ngIf="models.length > 0">          <div class="resources-title float-container">            <h2>Models ({{ models.length }})</h2>            <a [routerLink]="[\'models\']">View all</a>          </div>          <app-model-cards            [models]="models"            [maxModels]="10"          ></app-model-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getSimulations() as simulations">        <div class="resources" *ngIf="simulations.length > 0">          <div class="resources-title float-container">            <h2>Simulations ({{ simulations.length }})</h2>            <a [routerLink]="[\'simulations\']">View all</a>          </div>          <app-simulation-cards            [simulations]="simulations"            [maxSimulations]="10"          ></app-simulation-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getChartTypes() as chartTypes">        <div class="resources" *ngIf="chartTypes.length > 0">          <div class="resources-title float-container">            <h2>Chart types ({{ chartTypes.length }})</h2>            <a [routerLink]="[\'chart-types\']">View all</a>          </div>          <app-chart-type-cards            [chartTypes]="chartTypes"            [maxChartTypes]="10"          ></app-chart-type-cards>        </div>      </ng-container>      <ng-container *ngIf="user.getVisualizations() as visualizations">        <div class="resources" *ngIf="visualizations.length > 0">          <div class="resources-title float-container">            <h2>Visualizations ({{ visualizations.length }})</h2>            <a [routerLink]="[\'visualizations\']">View all</a>          </div>          <app-visualization-cards            [visualizations]="visualizations"            [maxVisualizations]="10"          ></app-visualization-cards>        </div>      </ng-container>    </div>  </div></div></div>'
     var COMPONENTS = [{'name': 'AboutComponent', 'selector': 'app-about'},{'name': 'AlertComponent', 'selector': 'app-alert'},{'name': 'AppComponent', 'selector': 'app-root'},{'name': 'Auth0CallbackComponent', 'selector': 'app-callback'},{'name': 'AuthorsComponent', 'selector': 'app-authors'},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'ChartTypeCardsComponent', 'selector': 'app-chart-type-cards'},{'name': 'ChartTypesComponent', 'selector': ''},{'name': 'ChartTypesGridComponent', 'selector': 'app-chart-types-grid'},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'Error404Component', 'selector': 'app-four'},{'name': 'FeedbackComponent', 'selector': 'app-feedback'},{'name': 'GridCardComponent', 'selector': 'app-grid-card'},{'name': 'GridComponent', 'selector': 'app-grid'},{'name': 'HelpComponent', 'selector': 'app-help'},{'name': 'HomeComponent', 'selector': 'app-home'},{'name': 'HyperLinkComponent', 'selector': 'app-hyper-link'},{'name': 'IdRendererGridComponent', 'selector': ''},{'name': 'IdRouteRendererGridComponent', 'selector': ''},{'name': 'LogoComponent', 'selector': 'app-logo'},{'name': 'ModelCardsComponent', 'selector': 'app-model-cards'},{'name': 'ModelsComponent', 'selector': ''},{'name': 'ModelsGridComponent', 'selector': 'app-models-grid'},{'name': 'NavIconsComponent', 'selector': 'app-nav-icons'},{'name': 'NavigationComponent', 'selector': 'app-navigation'},{'name': 'OkCancelDialogComponent', 'selector': 'app-ok-cancel-dialog'},{'name': 'ProfileComponent', 'selector': 'app-profile'},{'name': 'ProfileEditComponent', 'selector': 'app-profile-edit'},{'name': 'ProjectCardsComponent', 'selector': 'app-project-cards'},{'name': 'ProjectsComponent', 'selector': ''},{'name': 'ProjectsGridComponent', 'selector': 'app-projects-grid'},{'name': 'RouteRendererGridComponent', 'selector': ''},{'name': 'RouterLinkComponent', 'selector': 'app-router-link'},{'name': 'SearchToolPanelGridComponent', 'selector': ''},{'name': 'SidebarComponent', 'selector': 'app-sidebar'},{'name': 'SimulationCardsComponent', 'selector': 'app-simulation-cards'},{'name': 'SimulationsComponent', 'selector': ''},{'name': 'SimulationsGridComponent', 'selector': 'app-simulations-grid'},{'name': 'SortToolPanelGridComponent', 'selector': ''},{'name': 'TreeComponent', 'selector': 'app-tree'},{'name': 'UnderConstructionComponent', 'selector': 'app-under-construction'},{'name': 'UserMenuComponent', 'selector': 'app-user-menu'},{'name': 'VegaViewerComponent', 'selector': 'app-vega-viewer'},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'VisualizationCardsComponent', 'selector': 'app-visualization-cards'},{'name': 'VisualizationsComponent', 'selector': ''},{'name': 'VisualizationsGridComponent', 'selector': 'app-visualizations-grid'}];
     var DIRECTIVES = [];
     var ACTUAL_COMPONENT = {'name': 'ProfileComponent'};

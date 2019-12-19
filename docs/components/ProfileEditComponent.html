@@ -294,8 +294,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="45"
-                            class="link-to-prism">CRBM-Viz/src/app/Modules/user/profile/profile-edit.component.ts:45</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="46"
+                            class="link-to-prism">CRBM-Viz/src/app/Modules/user/profile/profile-edit.component.ts:46</a></div>
                 </td>
             </tr>
 
@@ -333,8 +333,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="66"
-                            class="link-to-prism">CRBM-Viz/src/app/Modules/user/profile/profile-edit.component.ts:66</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="72"
+                            class="link-to-prism">CRBM-Viz/src/app/Modules/user/profile/profile-edit.component.ts:72</a></div>
                 </td>
             </tr>
 
@@ -426,7 +426,8 @@ import { UserService } from &#x27;src/app/Shared/Services/user.service&#x27;;
 import { NavItemDisplayLevel } from &#x27;src/app/Shared/Enums/nav-item-display-level&#x27;;
 import { NavItem } from &#x27;src/app/Shared/Models/nav-item&#x27;;
 import { BreadCrumbsService } from &#x27;src/app/Shared/Services/bread-crumbs.service&#x27;;
-import { Observable } from &#x27;rxjs&#x27;;
+import { Observable, merge } from &#x27;rxjs&#x27;;
+import { pluck } from &#x27;rxjs/operators&#x27;;
 import { ProvidedFilter } from &#x27;ag-grid-community&#x27;;
 
 @Component({
@@ -434,7 +435,6 @@ import { ProvidedFilter } from &#x27;ag-grid-community&#x27;;
   templateUrl: &#x27;./profile-edit.component.html&#x27;,
   styleUrls: [&#x27;./profile-edit.component.sass&#x27;],
 })
-
 export class ProfileEditComponent implements OnInit {
   formGroup: FormGroup;
 
@@ -443,9 +443,10 @@ export class ProfileEditComponent implements OnInit {
     private formBuilder: FormBuilder,
     private snackBar: MatSnackBar,
     public auth: AuthService,
-    private userService: UserService) {
+    private userService: UserService
+  ) {
     this.formGroup &#x3D; this.formBuilder.group({
-      username: [&#x27;&#x27;],
+      userName: [&#x27;&#x27;],
       firstName: [&#x27;&#x27;],
       middleName: [&#x27;&#x27;],
       lastName: [&#x27;&#x27;],
@@ -467,25 +468,42 @@ export class ProfileEditComponent implements OnInit {
       { label: &#x27;Edit your profile&#x27; },
     ];
     const buttons: NavItem[] &#x3D; [
-      { iconType: &#x27;fas&#x27;, icon: &#x27;user&#x27;, label: &#x27;View&#x27;, route: [&#x27;/user&#x27;], display: NavItemDisplayLevel.loggedIn },
+      {
+        iconType: &#x27;fas&#x27;,
+        icon: &#x27;user&#x27;,
+        label: &#x27;View&#x27;,
+        route: [&#x27;/user&#x27;],
+        display: NavItemDisplayLevel.loggedIn,
+      },
     ];
     this.breadCrumbsService.set(crumbs, buttons);
-    let user: User
-    if (this.auth &amp;&amp; this.auth.token &amp;&amp; this.auth.token.sub) {
-      this.auth.userProfile$.subscribe(profile &#x3D;&gt;
-        this.userService.get$(profile.nickname).subscribe(getUser &#x3D;&gt;
-          user &#x3D; user
-        )
-      )
-      this.formGroup.patchValue(user);
-      // this.users.get().subscribe(res &#x3D;&gt; (this.user &#x3D; res));
-    }
+    let user: User;
+    this.auth.getUsername$().subscribe(username &#x3D;&gt; {
+      this.userService.get$(username).subscribe(loggedInUser &#x3D;&gt; {
+        user &#x3D; loggedInUser;
+        this.formGroup.patchValue(user);
+      });
+    });
+
+    // this.users.get().subscribe(res &#x3D;&gt; (this.user &#x3D; res));
   }
 
   submit(): void {
+    const username &#x3D; this.auth.getUsername$();
+    const userId &#x3D; this.auth.getUser$().pipe();
+    const userInfo &#x3D; merge(username, userId, 2);
     const data: User &#x3D; this.formGroup.value as User;
-    this.userService.set(data);
-
+    this.auth.getUsername$().subscribe(name &#x3D;&gt; {
+      this.auth
+        .getUser$()
+        .pipe(pluck(&#x27;sub&#x27;))
+        .subscribe(id &#x3D;&gt; {
+          console.log(data);
+          console.log(name);
+          console.log(id);
+          this.userService.set(data, name, id);
+        });
+    });
     this.snackBar.open(&#x27;Profile saved&#x27;, &#x27;&#x27;, {
       panelClass: &#x27;centered-snack-bar&#x27;,
       duration: 3000,
@@ -499,71 +517,84 @@ export class ProfileEditComponent implements OnInit {
         <pre class="line-numbers"><code class="language-html">&lt;form
   class&#x3D;&quot;page-content partial-width form&quot;
   [formGroup]&#x3D;&quot;formGroup&quot;
-  (ngSubmit)&#x3D;&quot;submit()&quot;&gt;
-
+  (ngSubmit)&#x3D;&quot;submit()&quot;
+&gt;
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Username *&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
-        formControlName&#x3D;&quot;username&quot;
+      &lt;input
+        matInput
+        [readonly]&#x3D;&quot;true&quot;
+        formControlName&#x3D;&quot;userName&quot;
         placeholder&#x3D;&quot;username&quot;
         required
-        disabled
         class&#x3D;&quot;form-input&quot;
-        /&gt;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Name *&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input form-group name&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;firstName&quot;
         required
         placeholder&#x3D;&quot;John&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
-      &lt;input matInput
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;middleName&quot;
         placeholder&#x3D;&quot;C&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
-      &lt;input matInput
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;lastName&quot;
         required
         placeholder&#x3D;&quot;Doe&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Organization&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;organization&quot;
         placeholder&#x3D;&quot;XXX University&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Organization&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;website&quot;
         type&#x3D;&quot;url&quot;
         placeholder&#x3D;&quot;https://www.mywebsite.org&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Email&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input form-group email&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;email&quot;
         type&#x3D;&quot;email&quot;
         required
         placeholder&#x3D;&quot;user@organization.org&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
 
       &lt;mat-select
         formControlName&#x3D;&quot;emailPublic&quot;
@@ -581,63 +612,75 @@ export class ProfileEditComponent implements OnInit {
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Gravatar email (for photo)&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;gravatarEmail&quot;
         type&#x3D;&quot;email&quot;
         placeholder&#x3D;&quot;user@organization.edu&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;GitHub username&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;gitHubId&quot;
         placeholder&#x3D;&quot;username&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Google Scholar id&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;googleScholarId&quot;
         placeholder&#x3D;&quot;XXXXXXXXXXXXX&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;ORCID&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;input matInput
+      &lt;input
+        matInput
         formControlName&#x3D;&quot;orcId&quot;
         placeholder&#x3D;&quot;xxxx-xxxx-xxxx-xxxx&quot;
-        class&#x3D;&quot;form-input&quot;/&gt;
+        class&#x3D;&quot;form-input&quot;
+      /&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
     &lt;div class&#x3D;&quot;form-field-title&quot;&gt;Description&lt;/div&gt;
     &lt;div class&#x3D;&quot;form-field-input&quot;&gt;
-      &lt;textarea matInput
+      &lt;textarea
+        matInput
         formControlName&#x3D;&quot;description&quot;
         placeholder&#x3D;&quot;Description of professional interests and experience.&quot;
         class&#x3D;&quot;form-input&quot;
         rows&#x3D;&quot;10&quot;
-        &gt;&lt;/textarea&gt;
+      &gt;&lt;/textarea&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
   &lt;div class&#x3D;&quot;form-field&quot;&gt;
-    &lt;button mat-button
+    &lt;button
+      mat-button
       type&#x3D;&quot;submit&quot;
       disableRipple&#x3D;&quot;true&quot;
       [disabled]&#x3D;&quot;!formGroup.valid&quot;
       class&#x3D;&quot;form-submit-button&quot;
-    &gt;Save&lt;/button&gt;
+    &gt;
+      Save
+    &lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 </code></pre>
@@ -680,7 +723,7 @@ export class ProfileEditComponent implements OnInit {
 <script src="../js/libs/htmlparser.js"></script>
 <script src="../js/libs/deep-iterator.js"></script>
 <script>
-        var COMPONENT_TEMPLATE = '<div><form  class="page-content partial-width form"  [formGroup]="formGroup"  (ngSubmit)="submit()">  <div class="form-field">    <div class="form-field-title">Username *</div>    <div class="form-field-input">      <input matInput        formControlName="username"        placeholder="username"        required        disabled        class="form-input"        />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Name *</div>    <div class="form-field-input form-group name">      <input matInput        formControlName="firstName"        required        placeholder="John"        class="form-input"/>      <input matInput        formControlName="middleName"        placeholder="C"        class="form-input"/>      <input matInput        formControlName="lastName"        required        placeholder="Doe"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Organization</div>    <div class="form-field-input">      <input matInput        formControlName="organization"        placeholder="XXX University"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Organization</div>    <div class="form-field-input">      <input matInput        formControlName="website"        type="url"        placeholder="https://www.mywebsite.org"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Email</div>    <div class="form-field-input form-group email">      <input matInput        formControlName="email"        type="email"        required        placeholder="user@organization.org"        class="form-input"/>      <mat-select        formControlName="emailPublic"        required        class="form-input"        disableRipple="true"        panelClass="form-select-input-panel"      >        <mat-option [value]="false">Private</mat-option>        <mat-option [value]="true">Public</mat-option>      </mat-select>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Gravatar email (for photo)</div>    <div class="form-field-input">      <input matInput        formControlName="gravatarEmail"        type="email"        placeholder="user@organization.edu"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">GitHub username</div>    <div class="form-field-input">      <input matInput        formControlName="gitHubId"        placeholder="username"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Google Scholar id</div>    <div class="form-field-input">      <input matInput        formControlName="googleScholarId"        placeholder="XXXXXXXXXXXXX"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">ORCID</div>    <div class="form-field-input">      <input matInput        formControlName="orcId"        placeholder="xxxx-xxxx-xxxx-xxxx"        class="form-input"/>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Description</div>    <div class="form-field-input">      <textarea matInput        formControlName="description"        placeholder="Description of professional interests and experience."        class="form-input"        rows="10"        ></textarea>    </div>  </div>  <div class="form-field">    <button mat-button      type="submit"      disableRipple="true"      [disabled]="!formGroup.valid"      class="form-submit-button"    >Save</button>  </div></form></div>'
+        var COMPONENT_TEMPLATE = '<div><form  class="page-content partial-width form"  [formGroup]="formGroup"  (ngSubmit)="submit()">  <div class="form-field">    <div class="form-field-title">Username *</div>    <div class="form-field-input">      <input        matInput        [readonly]="true"        formControlName="userName"        placeholder="username"        required        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Name *</div>    <div class="form-field-input form-group name">      <input        matInput        formControlName="firstName"        required        placeholder="John"        class="form-input"      />      <input        matInput        formControlName="middleName"        placeholder="C"        class="form-input"      />      <input        matInput        formControlName="lastName"        required        placeholder="Doe"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Organization</div>    <div class="form-field-input">      <input        matInput        formControlName="organization"        placeholder="XXX University"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Organization</div>    <div class="form-field-input">      <input        matInput        formControlName="website"        type="url"        placeholder="https://www.mywebsite.org"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Email</div>    <div class="form-field-input form-group email">      <input        matInput        formControlName="email"        type="email"        required        placeholder="user@organization.org"        class="form-input"      />      <mat-select        formControlName="emailPublic"        required        class="form-input"        disableRipple="true"        panelClass="form-select-input-panel"      >        <mat-option [value]="false">Private</mat-option>        <mat-option [value]="true">Public</mat-option>      </mat-select>    </div>  </div>  <div class="form-field">    <div class="form-field-title">Gravatar email (for photo)</div>    <div class="form-field-input">      <input        matInput        formControlName="gravatarEmail"        type="email"        placeholder="user@organization.edu"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">GitHub username</div>    <div class="form-field-input">      <input        matInput        formControlName="gitHubId"        placeholder="username"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Google Scholar id</div>    <div class="form-field-input">      <input        matInput        formControlName="googleScholarId"        placeholder="XXXXXXXXXXXXX"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">ORCID</div>    <div class="form-field-input">      <input        matInput        formControlName="orcId"        placeholder="xxxx-xxxx-xxxx-xxxx"        class="form-input"      />    </div>  </div>  <div class="form-field">    <div class="form-field-title">Description</div>    <div class="form-field-input">      <textarea        matInput        formControlName="description"        placeholder="Description of professional interests and experience."        class="form-input"        rows="10"      ></textarea>    </div>  </div>  <div class="form-field">    <button      mat-button      type="submit"      disableRipple="true"      [disabled]="!formGroup.valid"      class="form-submit-button"    >      Save    </button>  </div></form></div>'
     var COMPONENTS = [{'name': 'AboutComponent', 'selector': 'app-about'},{'name': 'AlertComponent', 'selector': 'app-alert'},{'name': 'AppComponent', 'selector': 'app-root'},{'name': 'Auth0CallbackComponent', 'selector': 'app-callback'},{'name': 'AuthorsComponent', 'selector': 'app-authors'},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'BrowseComponent', 'selector': ''},{'name': 'ChartTypeCardsComponent', 'selector': 'app-chart-type-cards'},{'name': 'ChartTypesComponent', 'selector': ''},{'name': 'ChartTypesGridComponent', 'selector': 'app-chart-types-grid'},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'EditComponent', 'selector': ''},{'name': 'Error404Component', 'selector': 'app-four'},{'name': 'FeedbackComponent', 'selector': 'app-feedback'},{'name': 'GridCardComponent', 'selector': 'app-grid-card'},{'name': 'GridComponent', 'selector': 'app-grid'},{'name': 'HelpComponent', 'selector': 'app-help'},{'name': 'HomeComponent', 'selector': 'app-home'},{'name': 'HyperLinkComponent', 'selector': 'app-hyper-link'},{'name': 'IdRendererGridComponent', 'selector': ''},{'name': 'IdRouteRendererGridComponent', 'selector': ''},{'name': 'LogoComponent', 'selector': 'app-logo'},{'name': 'ModelCardsComponent', 'selector': 'app-model-cards'},{'name': 'ModelsComponent', 'selector': ''},{'name': 'ModelsGridComponent', 'selector': 'app-models-grid'},{'name': 'NavIconsComponent', 'selector': 'app-nav-icons'},{'name': 'NavigationComponent', 'selector': 'app-navigation'},{'name': 'OkCancelDialogComponent', 'selector': 'app-ok-cancel-dialog'},{'name': 'ProfileComponent', 'selector': 'app-profile'},{'name': 'ProfileEditComponent', 'selector': 'app-profile-edit'},{'name': 'ProjectCardsComponent', 'selector': 'app-project-cards'},{'name': 'ProjectsComponent', 'selector': ''},{'name': 'ProjectsGridComponent', 'selector': 'app-projects-grid'},{'name': 'RouteRendererGridComponent', 'selector': ''},{'name': 'RouterLinkComponent', 'selector': 'app-router-link'},{'name': 'SearchToolPanelGridComponent', 'selector': ''},{'name': 'SidebarComponent', 'selector': 'app-sidebar'},{'name': 'SimulationCardsComponent', 'selector': 'app-simulation-cards'},{'name': 'SimulationsComponent', 'selector': ''},{'name': 'SimulationsGridComponent', 'selector': 'app-simulations-grid'},{'name': 'SortToolPanelGridComponent', 'selector': ''},{'name': 'TreeComponent', 'selector': 'app-tree'},{'name': 'UnderConstructionComponent', 'selector': 'app-under-construction'},{'name': 'UserMenuComponent', 'selector': 'app-user-menu'},{'name': 'VegaViewerComponent', 'selector': 'app-vega-viewer'},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'ViewComponent', 'selector': ''},{'name': 'VisualizationCardsComponent', 'selector': 'app-visualization-cards'},{'name': 'VisualizationsComponent', 'selector': ''},{'name': 'VisualizationsGridComponent', 'selector': 'app-visualizations-grid'}];
     var DIRECTIVES = [];
     var ACTUAL_COMPONENT = {'name': 'ProfileEditComponent'};
