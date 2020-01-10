@@ -230,6 +230,15 @@ export class SimulationService {
     return this.filter(data, name) as Simulation[];
   }
 
+  private filter(list: object[], name?: string): object[] {
+    if (name) {
+      const lowCaseName: string = name.toLowerCase();
+      return list.filter(item => item['name'].toLowerCase().includes(lowCaseName));
+    } else {
+      return list;
+    }
+  }
+
 
   getHistory(id: string, includeParents: boolean = true, includeChildren: boolean = true): object[] {
     // tslint:disable:max-line-length
@@ -333,4 +342,5 @@ export class SimulationService {
   }
 
   delete(id?: string): void {}
+
 }

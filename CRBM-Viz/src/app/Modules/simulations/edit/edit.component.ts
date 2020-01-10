@@ -516,6 +516,7 @@ export class EditComponent implements OnInit {
 
   submit() {
     const data: Simulation = this.formGroup.value as Simulation;
+    console.log(data);
     if (this.mode === Mode.fork) {
       data.parent = this.simulation;
     }
@@ -543,4 +544,5 @@ export class EditComponent implements OnInit {
       },
     });
   }
+
 }
