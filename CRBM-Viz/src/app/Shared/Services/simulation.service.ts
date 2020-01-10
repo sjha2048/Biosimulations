@@ -28,6 +28,9 @@ export class SimulationService {
 
   simulationDataChangeSubject = new Subject<object>();
 
+  // Variables used to store new simulation data
+  combineArchiveSelected = null;
+  combineArchiveParsed = null;
   private userService: UserService;
 
   constructor(
@@ -214,6 +217,18 @@ export class SimulationService {
 
 
 
+  parseCombineArchive(archiveInfo) {
+    this.combineArchiveSelected = archiveInfo;
+    const params = `?omex=${encodeURIComponent(archiveInfo['filename'])}&author=${encodeURIComponent(archiveInfo['createdBy'])}`;
+    const url = `${environment.crbm.CRBMAPI_URL}/simulation${params}`;
+    this.http.get(url).subscribe(
+      success => {
+        this.combineArchiveParsed = success;
+      },
+      error => {
+        this.alertService.openDialog('Error occured' + JSON.stringify(error));
+      }
+    );
   get(id: string): Simulation {
     this.getServices();
     return SimulationService._get(id, true);
